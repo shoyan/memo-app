@@ -18,29 +18,67 @@ saveButton.addEventListener('click', function() {
         text: textarea.value
     });
     localStorage.setItem('memo', JSON.stringify(memos));
+
+    // 画面の要素を追加する
+    const li = document.createElement('li')
+    li.innerText = title.value
+    li.dataset.index = memos['data'].length - 1
+
+    // liタグをクリックした時にフォームに内容を表示する
+    li.addEventListener('click', elem => {
+        const memoIndex = elem.target.dataset.index
+        document.querySelector('#memo-index').value = memoIndex
+        const memo = JSON.parse(localStorage.getItem('memo'));
+        const data = memo.data[memoIndex]
+        if (data) {
+            title.value = data.title
+            textarea.value = data.text
+        }
+    })
+ 
+    const titles = document.querySelector('#titles')
+    titles.appendChild(li)
 })
 
 // 画面読み込み後の処理
 window.onload = function() {
     const memo = JSON.parse(localStorage.getItem('memo'));
+    const title = document.querySelector('#title')
     const textarea = document.querySelector('#memo')
     const titles = document.querySelector('#titles')
 
     // タイトルの一覧を作成
-    memo.data.forEach( _memo => {
+    memo.data.forEach( (_memo, index) => {
         const li = document.createElement('li')
         li.innerText = _memo.title
+        li.dataset.index = index
         titles.appendChild(li)
     });
 
     // タイトルをクリックしたときの処理
     titles.querySelectorAll('li').forEach(li => {
         li.addEventListener('click', elem => {
-            const data = memo.data.filter(_memo => _memo.title === elem.target.textContent)
+            const memoIndex = elem.target.dataset.index
+            document.querySelector('#memo-index').value = memoIndex
+            const data = memo.data[memoIndex]
             if (data) {
-                title.value = data[0].title
-                textarea.value = data[0].text
+                title.value = data.title
+                textarea.value = data.text
             }
         })
+    })
+
+    const deleteButton = document.querySelector('#delete_button');
+    deleteButton.addEventListener('click', () => {
+        const memoIndex = document.querySelector('#memo-index').value
+        // メモを削除
+        memos.data.splice(memoIndex, 1)
+        // ローカルストレージを更新
+        localStorage.setItem('memo', JSON.stringify(memos));
+        // liタグを削除
+        titles.querySelectorAll('li')[memoIndex].remove();
+        // フォームを初期化
+        title.value = "";
+        textarea.value = "";
     })
 }
